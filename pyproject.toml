@@ -1,0 +1,54 @@
+[project]
+name = "gitlog"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Prince",email = "93841337+princej02@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "typer (>=0.24.1,<0.25.0)",
+    "gitpython (>=3.1.46,<4.0.0)",
+    "rich (>=14.3.3,<15.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "gitlog", from = "src"}]
+
+[tool.poetry.scripts]
+gitlog = "gitlog.main:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+test = [
+    "pytest (>=9.0.2,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)"
+]
+dev = [
+    "black (>=26.3.1,<27.0.0)",
+    "flake8 (>=7.3.0,<8.0.0)",
+    "isort (>=8.0.1,<9.0.0)",
+    "mypy (>=1.19.1,<2.0.0)",
+    "pylint (>=4.0.5,<5.0.0)"
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py311", "py312", "py313"]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+strict = true
+python_version = "3.13"
+
+[tool.pylint.messages_control]
+disable = ["C0111"] # missing docstrings - adjust to taste
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
