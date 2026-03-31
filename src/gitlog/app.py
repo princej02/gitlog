@@ -29,7 +29,6 @@ def check_path(path: Path) -> tuple[bool, str]:
 def print_summary(commits: list[Commit]) -> None:
     total_commits = len(commits)
 
-    # unique contributors (ordered)
     contributors = list(
         dict.fromkeys(
             commit.author.name
@@ -38,32 +37,38 @@ def print_summary(commits: list[Commit]) -> None:
         )
     )
 
-    changed_files: list[str] = []
+    changed_files: set[str] = set()
     for commit in commits:
-        changed_files.extend(str(path) for path in commit.stats.files.keys())
-
-    unique_files = set(changed_files)
+        changed_files.update(str(path) for path in commit.stats.files.keys())
 
     commit_freq = Counter(
         commit.author.name for commit in commits if commit.author and commit.author.name
     )
 
     table = Table(title="Git Commit Summary", box=box.ROUNDED)
-
-    table.add_column(
-        f"Commits ({total_commits})", justify="right", style="cyan", no_wrap=True
-    )
-    table.add_column("Contributors", style="magenta")
-    table.add_column("files", style="red")
-    table.add_column("Frequency", style="green")
+    table.add_column("Hash", style="cyan", no_wrap=True)
+    table.add_column("Author", style="magenta")
+    table.add_column("Date", style="yellow")
+    table.add_column("Message", style="white")
 
     for commit in commits:
+        message = commit.message
+        message_str = message.decode() if isinstance(message, bytes) else message
         table.add_row(
-            str(commit), str(contributors), str(unique_files), str(commit_freq.total())
+            commit.hexsha[:7],
+            commit.author.name if commit.author else "Unknown",
+            datetime.fromtimestamp(commit.committed_date).strftime("%Y-%m-%d"),
+            message_str.strip().splitlines()[0],
         )
 
     console = Console()
     console.print(table)
+    console.print(f"[cyan]Total commits:[/cyan] {total_commits}")
+    console.print(f"[magenta]Contributors:[/magenta] {', '.join(contributors)}")
+    console.print(f"[red]Unique files changed:[/red] {len(changed_files)}")
+    most_active = commit_freq.most_common(1)
+    most_active_name = most_active[0][0] if most_active else "N/A"
+    console.print(f"[green]Most active:[/green] {most_active_name}")
 
 
 def process_summary(path: Path, days: int) -> None:
