@@ -3,24 +3,27 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import typer
-from git import Commit, Repo
+from git import BadName, Commit, InvalidGitRepositoryError, Repo
 from rich import box
 from rich.console import Console
 from rich.table import Table
 
 
-def check_path(path: Path) -> bool:
-    repo = Repo(path)
+def check_path(path: Path) -> tuple[bool, str]:
+    try:
+        repo = Repo(path)
+    except InvalidGitRepositoryError:
+        return False, "No git repository in the chosen path"
 
-    if repo is None:
-        print("No current git directory in chosen path")
-        return False
+    if repo.bare:
+        return False, "Repository is bare"
 
-    if repo.head.commit is None:
-        print("No commits in range")
-        return False
+    try:
+        _ = repo.head.commit
+    except (ValueError, BadName):
+        return False, "Repository has no commits"
 
-    return True
+    return True, ""
 
 
 def print_summary(commits: list[Commit]) -> None:
@@ -66,8 +69,9 @@ def print_summary(commits: list[Commit]) -> None:
 def process_summary(path: Path, days: int) -> None:
     now = datetime.now()
     cutoff = now - timedelta(days)
+    ok, message = check_path(path)
 
-    if check_path(path) is True:
+    if ok:
         repo = Repo(path)
         commits = [
             commit
@@ -76,7 +80,8 @@ def process_summary(path: Path, days: int) -> None:
         ]
         print_summary(commits)
     else:
-        raise typer.Exit()
+        typer.echo(message, err=True)
+        raise typer.Exit(code=1)
 
 
 app = typer.Typer()
