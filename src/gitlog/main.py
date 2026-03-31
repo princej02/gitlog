@@ -1,4 +1,5 @@
 from gitlog.app import app
 
-def main():
+
+def main() -> None:
     app()
