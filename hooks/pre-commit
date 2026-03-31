@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+
+echo "Running pre-commit checks..."
+
+echo "▶ isort"
+poetry run isort --check-only src/
+
+echo "▶ black"
+poetry run black --check src/
+
+echo "▶ flake8"
+poetry run flake8 src/
+
+echo "▶ mypy"
+poetry run mypy src/
+
+echo "▶ pylint"
+poetry run pylint src/
+
+echo "All checks passed."
